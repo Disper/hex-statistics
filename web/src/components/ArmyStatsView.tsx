@@ -71,11 +71,10 @@ export function ArmyStatsView({
           {isWiremen ? (
             <div className="mt-6 rounded-xl border border-teal-500/25 bg-teal-950/20 px-4 py-3">
               <p className="text-teal-300/90 text-xs font-semibold uppercase tracking-wider">
-                Wiremen in the matrix
+                Wiremen
               </p>
               <p className="text-stone-500 text-xs mt-1 leading-relaxed">
-                Wiremen appears as an opponent in scraped rows; the crawler may not always list
-                Wiremen as a primary army. Cross-check rare matchups when sample sizes are small.
+                Several matchups have very few games; treat those win rates as indicative only.
               </p>
             </div>
           ) : null}
