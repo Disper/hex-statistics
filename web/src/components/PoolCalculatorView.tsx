@@ -3,6 +3,7 @@ import type { ArmiesStatsPayload } from "../types";
 import { getArmyAccent } from "../data/armyAccents";
 import { ArmyPoolToggle } from "./ArmyPoolToggle";
 import { buildPoolSummaries } from "../lib/poolStats";
+import { sortArmiesByDisplayOrder } from "../data/armyOrder";
 
 type Props = {
   data: ArmiesStatsPayload;
@@ -19,15 +20,24 @@ export function PoolCalculatorView({ data, armyNames }: Props) {
 
   const toggleYour = useCallback((name: string) => {
     setYour((prev) =>
-      prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name].sort((a, b) => a.localeCompare(b)),
+      prev.includes(name)
+        ? prev.filter((x) => x !== name)
+        : sortArmiesByDisplayOrder([...prev, name]),
     );
   }, []);
 
   const toggleOpp = useCallback((name: string) => {
     setOpp((prev) =>
-      prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name].sort((a, b) => a.localeCompare(b)),
+      prev.includes(name)
+        ? prev.filter((x) => x !== name)
+        : sortArmiesByDisplayOrder([...prev, name]),
     );
   }, []);
+
+  const swapPools = useCallback(() => {
+    setYour(sortArmiesByDisplayOrder(opp));
+    setOpp(sortArmiesByDisplayOrder(your));
+  }, [your, opp]);
 
   const summaries = useMemo(() => {
     if (your.length === 0 || opp.length === 0) return [];
@@ -57,15 +67,24 @@ export function PoolCalculatorView({ data, armyNames }: Props) {
       />
 
       <div className="flex flex-wrap items-center gap-6 rounded-xl border border-stone-700 bg-stone-900/40 px-4 py-3">
-        <label className="flex items-center gap-2 text-sm text-stone-300 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={showGameCounts}
-            onChange={(e) => setShowGameCounts(e.target.checked)}
-            className="rounded border-stone-600 bg-stone-900 text-amber-500 focus:ring-amber-500/40 focus:ring-offset-stone-950"
-          />
-          Show game counts
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-stone-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showGameCounts}
+              onChange={(e) => setShowGameCounts(e.target.checked)}
+              className="rounded border-stone-600 bg-stone-900 text-amber-500 focus:ring-amber-500/40 focus:ring-offset-stone-950"
+            />
+            Show game counts
+          </label>
+          <button
+            type="button"
+            onClick={swapPools}
+            className="rounded-md border border-stone-600 bg-stone-800/80 px-3 py-1.5 text-xs font-medium text-stone-200 hover:bg-stone-700/80 hover:border-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:ring-offset-2 focus:ring-offset-stone-950"
+          >
+            Swap your / opponent
+          </button>
+        </div>
         <p className="text-stone-500 text-xs leading-relaxed">
           Matches the original “Podlicz statystyki / Pokaż liczbę gier” flow: aggregate win rates across
           your pool vs every opponent in their pool (mirror matchups excluded).

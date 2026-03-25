@@ -5,6 +5,8 @@ import { ArmyGrid } from "./components/ArmyGrid";
 import { ArmyStatsView } from "./components/ArmyStatsView";
 import { PoolCalculatorView } from "./components/PoolCalculatorView";
 import { getArmyAccent } from "./data/armyAccents";
+import { sortArmiesByDisplayOrder } from "./data/armyOrder";
+import { APP_VERSION_DISPLAY } from "./version";
 
 type HomeTab = "matrix" | "pool";
 
@@ -43,7 +45,7 @@ export default function App() {
   }
 
   const { data } = state;
-  const armyNames = Object.keys(data.ArmiesStatsMap).sort((a, b) => a.localeCompare(b));
+  const armyNames = sortArmiesByDisplayOrder(Object.keys(data.ArmiesStatsMap));
   const selectedStats = selectedArmy ? data.ArmiesStatsMap[selectedArmy] : null;
 
   return (
@@ -68,22 +70,6 @@ export default function App() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-100">
               Army statistics
             </h1>
-            <p className="mt-3 text-stone-400 text-sm leading-relaxed max-w-2xl">
-              Head-to-head win rates from the tournament army matrix — browse the full matrix or
-              aggregate pools like the classic{" "}
-              <a
-                href="https://disper.github.io/stats/index.html"
-                className="text-stone-300 underline decoration-stone-600 hover:decoration-stone-400 transition-colors"
-                target="_blank"
-                rel="noreferrer"
-              >
-                disper.github.io
-              </a>{" "}
-              tool.
-            </p>
-            {data.created ? (
-              <p className="mt-2 text-stone-500 text-xs">Last updated: {data.created}</p>
-            ) : null}
           </div>
 
           <div
@@ -128,6 +114,13 @@ export default function App() {
           ) : (
             <PoolCalculatorView data={data} armyNames={armyNames} />
           )}
+
+          <footer className="mt-12 pt-8 border-t border-stone-800">
+            <p className="text-stone-500 text-xs leading-relaxed">
+              App made by Disper · {APP_VERSION_DISPLAY}
+              {data.created ? ` · Data snapshot from ${data.created}` : ""}
+            </p>
+          </footer>
         </main>
       )}
     </div>
