@@ -15,13 +15,11 @@ export type ArmyPoolSummary = {
   avg: number;
   /** Sum of games across those matchups */
   totalGames: number;
-  /** Win rate weighted by games in each matchup */
-  weightedAvg: number;
 };
 
 /**
  * For each of `yourArmies`, collect win% vs every opponent in `opponentArmies`
- * (excluding mirror matchups). Aggregates min / max / mean win%, plus games-weighted mean.
+ * (excluding mirror matchups). Aggregates min / max / mean win%.
  */
 export function buildPoolSummaries(
   data: ArmiesStatsPayload,
@@ -55,10 +53,6 @@ export function buildPoolSummaries(
     const max = Math.max(...winPcts);
     const avg = winPcts.reduce((a, b) => a + b, 0) / winPcts.length;
     const totalGames = matchups.reduce((a, m) => a + m.games, 0);
-    const weightedAvg =
-      totalGames > 0
-        ? matchups.reduce((a, m) => a + m.winPct * m.games, 0) / totalGames
-        : avg;
 
     out.push({
       army,
@@ -67,7 +61,6 @@ export function buildPoolSummaries(
       max,
       avg,
       totalGames,
-      weightedAvg,
     });
   }
 

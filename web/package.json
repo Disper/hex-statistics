@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "node scripts/generate-data-js.mjs && tsc -b && vite build",
     "preview": "vite preview",
-    "sync-stats": "cp ../armiesStats.json public/armiesStats.json && node scripts/generate-data-js.mjs"
+    "sync-stats": "cp ../armiesStats.json public/armiesStats.json && node scripts/generate-data-js.mjs",
+    "deploy-to-github": "bash scripts/deploy-to-github.sh"
   },
   "dependencies": {
     "react": "^19.0.0",
