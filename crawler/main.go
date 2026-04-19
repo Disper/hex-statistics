@@ -31,9 +31,11 @@ func main() {
 	armiesStats := config.ArmiesStats{}
 	armiesStats.ArmiesStatsMap = make(map[string]config.ArmyStats)
 
-	for _, army := range armiesList {
+	total := len(armiesList)
+	for i, army := range armiesList {
+		log.Printf("Crawling army %d/%d: %s", i+1, total, army)
 		res := SelectArmy(ctx, army, &armiesStats)
-		log.Println(strings.TrimSpace(res))
+		log.Printf("[%d/%d] %s", i+1, total, strings.TrimSpace(res))
 	}
 
 	armiesStats.Created = time.Now().Format(time.DateTime)
