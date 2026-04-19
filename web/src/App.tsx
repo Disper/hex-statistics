@@ -6,6 +6,7 @@ import { ArmyStatsView } from "./components/ArmyStatsView";
 import { PoolCalculatorView } from "./components/PoolCalculatorView";
 import { getArmyAccent } from "./data/armyAccents";
 import { sortArmiesByDisplayOrder } from "./data/armyOrder";
+import { FooterAuthorAttribution } from "./components/FooterAuthorAttribution";
 import { APP_VERSION_DISPLAY } from "./version";
 
 type HomeTab = "matrix" | "pool";
@@ -117,7 +118,9 @@ export default function App() {
 
           <footer className="mt-12 pt-8 border-t border-stone-800">
             <p className="text-stone-500 text-xs leading-relaxed">
-              App made by Disper · {APP_VERSION_DISPLAY}
+              <FooterAuthorAttribution />
+              {" · "}
+              {APP_VERSION_DISPLAY}
               {data.created ? ` · Data snapshot from ${data.created}` : ""}
             </p>
           </footer>
