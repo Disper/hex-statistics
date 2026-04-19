@@ -1,0 +1,100 @@
+name: Daily stats crawl
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: crawl-stats
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Snapshot previous stats
+        id: snapshot
+        run: cp armiesStats.json armiesStats.prev.json
+
+      - name: Run crawler
+        run: go run ./crawler
+
+      - name: Validate new stats
+        id: validate
+        run: node scripts/validate-stats.mjs armiesStats.prev.json armiesStats.json
+
+      - name: Upload datasets on failure
+        if: failure() && hashFiles('armiesStats.prev.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: stats-crawl-failure-${{ github.run_id }}
+          path: |
+            armiesStats.json
+            armiesStats.prev.json
+
+      - name: Restore committed stats on failure
+        if: failure() && hashFiles('armiesStats.prev.json') != ''
+        run: cp -f armiesStats.prev.json armiesStats.json
+
+      - name: Detect changes
+        if: success()
+        id: diff
+        run: |
+          if cmp -s armiesStats.prev.json armiesStats.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          rm -f armiesStats.prev.json
+
+      - name: Commit refreshed stats
+        if: success() && steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add armiesStats.json
+          git commit -m "chore(stats): daily refresh $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Build web bundle
+        if: success() && steps.diff.outputs.changed == 'true'
+        working-directory: web
+        run: |
+          npm ci
+          npm run sync-stats
+          npm run build
+
+      - name: Deploy to disper.github.io/hex-stats
+        if: success() && steps.diff.outputs.changed == 'true'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DISPER_GH_IO_TOKEN }}
+          external_repository: Disper/disper.github.io
+          publish_branch: main
+          publish_dir: ./web/dist
+          destination_dir: hex-stats
+          keep_files: true
+          commit_message: "deploy hex-stats @ ${{ github.sha }}"
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
