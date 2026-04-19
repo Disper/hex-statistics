@@ -38,7 +38,11 @@ func main() {
 		log.Printf("[%d/%d] %s", i+1, total, strings.TrimSpace(res))
 	}
 
-	armiesStats.Created = time.Now().UTC().Format(time.DateTime) + " UTC"
+	loc, err := time.LoadLocation("Europe/Warsaw")
+	if err != nil {
+		loc = time.UTC
+	}
+	armiesStats.Created = time.Now().In(loc).Format("2006-01-02 15:04:05 MST")
 	armiesStatsByte, err := json.Marshal(armiesStats)
 	if err != nil {
 		return
