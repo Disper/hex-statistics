@@ -1,0 +1,131 @@
+name: Manual accept stats
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Failed 'Daily stats crawl' run id to accept. Leave empty to pick the most recent failed run."
+        required: false
+        default: ""
+      confirm:
+        description: "Type 'accept' to override the validator and publish the rejected dataset."
+        required: true
+        default: ""
+
+concurrency:
+  group: crawl-stats
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Guard against accidental runs
+        run: |
+          if [ "${{ inputs.confirm }}" != "accept" ]; then
+            echo "confirm input must be exactly 'accept' (got: '${{ inputs.confirm }}')"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Resolve run id
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          run_id="${INPUT_RUN_ID}"
+          if [ -z "${run_id}" ]; then
+            echo "No run id provided, resolving most recent failed 'Daily stats crawl' run..."
+            run_id="$(gh run list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --workflow "Daily stats crawl" \
+              --status failure \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId')"
+          fi
+          if [ -z "${run_id}" ] || [ "${run_id}" = "null" ]; then
+            echo "Could not resolve a failed Daily stats crawl run id."
+            exit 1
+          fi
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+          echo "Accepting artifact from run id: ${run_id}"
+
+      - name: Download rejected dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: stats-crawl-failure-${{ steps.resolve.outputs.run_id }}
+          path: .artifact
+          run-id: ${{ steps.resolve.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sanity check artifact JSON
+        run: |
+          set -euo pipefail
+          if [ ! -f .artifact/armiesStats.json ]; then
+            echo "Artifact does not contain armiesStats.json"
+            ls -la .artifact || true
+            exit 1
+          fi
+          node scripts/validate-stats.mjs .artifact/armiesStats.json .artifact/armiesStats.json
+
+      - name: Replace committed stats with artifact
+        id: replace
+        run: |
+          set -euo pipefail
+          if cmp -s .artifact/armiesStats.json armiesStats.json; then
+            echo "Artifact is identical to committed armiesStats.json; nothing to override."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            mv .artifact/armiesStats.json armiesStats.json
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          rm -rf .artifact
+
+      - name: Commit override
+        if: steps.replace.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add armiesStats.json
+          git commit -m "chore(stats): manual override accept run #${{ steps.resolve.outputs.run_id }}"
+          git push
+
+      - name: Build web bundle
+        if: steps.replace.outputs.changed == 'true'
+        working-directory: web
+        run: |
+          npm ci
+          npm run sync-stats
+          npm run build
+
+      - name: Deploy to disper.github.io/hex-stats
+        if: steps.replace.outputs.changed == 'true'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DISPER_GH_IO_TOKEN }}
+          external_repository: Disper/disper.github.io
+          publish_branch: main
+          publish_dir: ./web/dist
+          destination_dir: hex-stats
+          keep_files: true
+          commit_message: "deploy hex-stats manual override @ ${{ github.sha }}"
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
