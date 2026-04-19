@@ -38,7 +38,7 @@ func main() {
 		log.Printf("[%d/%d] %s", i+1, total, strings.TrimSpace(res))
 	}
 
-	armiesStats.Created = time.Now().Format(time.DateTime)
+	armiesStats.Created = time.Now().UTC().Format(time.DateTime) + " UTC"
 	armiesStatsByte, err := json.Marshal(armiesStats)
 	if err != nil {
 		return
