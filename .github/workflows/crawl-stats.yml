@@ -29,15 +29,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: web/package-lock.json
+
+      - name: Setup Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+          install-dependencies: true
 
       - name: Snapshot previous stats
         id: snapshot
         run: cp armiesStats.json armiesStats.prev.json
 
       - name: Run crawler
+        env:
+          CHROMEDP_EXEC_PATH: ${{ steps.chrome.outputs['chrome-path'] }}
         run: go run ./crawler
 
       - name: Validate new stats
