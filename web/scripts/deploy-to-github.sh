@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build the Vite app, then sync web/dist/ to the GitHub Pages stats folder (sibling repo).
-# Override destination: DEPLOY_GITHUB_STATS_DIR=/path/to/stats
+# Build the Vite app, then sync web/dist/ to the GitHub Pages hex-stats folder (sibling repo).
+# Override destination: DEPLOY_GITHUB_STATS_DIR=/path/to/hex-stats
 
 web_root="$(cd "$(dirname "$0")/.." && pwd)"
 repo_root="$(cd "$web_root/.." && pwd)"
 dist_dir="$web_root/dist"
-default_dest="$repo_root/../disper.github.io/stats"
+default_dest="$repo_root/../disper.github.io/hex-stats"
 dest="${DEPLOY_GITHUB_STATS_DIR:-$default_dest}"
 
 if [[ ! -d "$dest" ]]; then
