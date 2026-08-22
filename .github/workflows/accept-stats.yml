@@ -115,7 +115,7 @@ jobs:
           npm run sync-stats
           npm run build
 
-       - name: Deploy to disper.github.io/hex-stats
+      - name: Deploy to disper.github.io/hex-stats
         uses: peaceiris/actions-gh-pages@v4
         with:
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
