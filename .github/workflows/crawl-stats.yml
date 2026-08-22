@@ -94,11 +94,11 @@ jobs:
           npm run sync-stats
           npm run build
 
-      - name: Deploy to disper.github.io/hex-stats
+       - name: Deploy to disper.github.io/hex-stats
         if: success() && steps.diff.outputs.changed == 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.DISPER_GH_IO_TOKEN }}
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           external_repository: Disper/disper.github.io
           publish_branch: main
           publish_dir: ./web/dist
