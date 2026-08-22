@@ -109,7 +109,6 @@ jobs:
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:main
 
       - name: Build web bundle
-        if: steps.replace.outputs.changed == 'true'
         working-directory: web
         run: |
           npm ci
@@ -117,7 +116,6 @@ jobs:
           npm run build
 
       - name: Deploy to disper.github.io/hex-stats
-        if: steps.replace.outputs.changed == 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.DISPER_GH_IO_TOKEN }}
