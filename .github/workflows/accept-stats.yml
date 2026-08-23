@@ -51,17 +51,27 @@ jobs:
           set -euo pipefail
           run_id="${INPUT_RUN_ID}"
           if [ -z "${run_id}" ]; then
-            echo "No run id provided, resolving most recent failed 'Daily stats crawl' run..."
-            run_id="$(gh run list \
+            echo "No run id provided, resolving most recent failed 'Daily stats crawl' run with an artifact..."
+            candidates="$(gh run list \
               --repo "${GITHUB_REPOSITORY}" \
               --workflow "Daily stats crawl" \
               --status failure \
-              --limit 1 \
+              --limit 20 \
               --json databaseId \
-              --jq '.[0].databaseId')"
+              --jq '.[].databaseId')"
+            for candidate in ${candidates}; do
+              artifact_name="stats-crawl-failure-${candidate}"
+              count="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${candidate}/artifacts" \
+                --jq ".artifacts | map(select(.name == \"${artifact_name}\")) | length")"
+              if [ "${count}" -gt 0 ]; then
+                run_id="${candidate}"
+                break
+              fi
+              echo "Run ${candidate} has no artifact (deploy-only failure), skipping..."
+            done
           fi
           if [ -z "${run_id}" ] || [ "${run_id}" = "null" ]; then
-            echo "Could not resolve a failed Daily stats crawl run id."
+            echo "Could not find a failed Daily stats crawl run with a stats artifact."
             exit 1
           fi
           echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"

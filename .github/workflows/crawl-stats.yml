@@ -53,6 +53,10 @@ jobs:
         id: validate
         run: node scripts/validate-stats.mjs armiesStats.prev.json armiesStats.json
 
+      - name: Restore committed stats on failure
+        if: failure()
+        run: cp -f armiesStats.prev.json armiesStats.json
+
       - name: Upload datasets on failure
         if: failure() && hashFiles('armiesStats.prev.json') != ''
         uses: actions/upload-artifact@v4
@@ -61,10 +65,6 @@ jobs:
           path: |
             armiesStats.json
             armiesStats.prev.json
-
-      - name: Restore committed stats on failure
-        if: failure() && hashFiles('armiesStats.prev.json') != ''
-        run: cp -f armiesStats.prev.json armiesStats.json
 
       - name: Detect changes
         if: success()
