@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 /**
  * Validates a freshly crawled armiesStats.json against a previous snapshot.
- * Exits 0 only if structure is sane and every (army, opponent) matchup has
- * armyGamesCount >= previous (monotonic non-decrease).
+ * Exits 0 only if structure is sane and no (army, opponent) matchup lost more
+ * games than the tolerance: a drop is allowed when it is at most
+ * MAX_DROP_RATIO of the previous count or at most MAX_DROP_GAMES games,
+ * whichever is larger (the source occasionally removes or reassigns games).
  *
  * Usage: node scripts/validate-stats.mjs <previous.json> <new.json>
  */
 
 import { readFileSync } from "node:fs";
 import { exit } from "node:process";
+
+const MAX_DROP_RATIO = 0.05;
+const MAX_DROP_GAMES = 3;
+
+function allowedDrop(prevGames) {
+  return Math.max(Math.floor(prevGames * MAX_DROP_RATIO), MAX_DROP_GAMES);
+}
 
 const USAGE = "Usage: node scripts/validate-stats.mjs <previous.json> <new.json>\n";
 
@@ -115,6 +124,7 @@ function main() {
   }
 
   const regressions = [];
+  const toleratedDrops = [];
   const maxPrint = 40;
 
   for (const army of prevArmies) {
@@ -138,11 +148,25 @@ function main() {
         continue;
       }
       validateDetails(army, opponent, newDet, "new");
-      if (newDet.armyGamesCount < prevDet.armyGamesCount) {
-        regressions.push(
-          `${army} vs ${opponent}: games ${prevDet.armyGamesCount} -> ${newDet.armyGamesCount}`,
-        );
+      const drop = prevDet.armyGamesCount - newDet.armyGamesCount;
+      if (drop > 0) {
+        const line = `${army} vs ${opponent}: games ${prevDet.armyGamesCount} -> ${newDet.armyGamesCount}`;
+        if (drop > allowedDrop(prevDet.armyGamesCount)) {
+          regressions.push(line);
+        } else {
+          toleratedDrops.push(line);
+        }
       }
+    }
+  }
+
+  if (toleratedDrops.length > 0) {
+    console.log(`Tolerated small game count drops (<= ${MAX_DROP_RATIO * 100}% or <= ${MAX_DROP_GAMES} games):`);
+    for (const line of toleratedDrops.slice(0, maxPrint)) {
+      console.log(`  - ${line}`);
+    }
+    if (toleratedDrops.length > maxPrint) {
+      console.log(`  ... and ${toleratedDrops.length - maxPrint} more`);
     }
   }
 

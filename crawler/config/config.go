@@ -8,6 +8,12 @@ import (
 )
 
 const WaitSecondsForArmyToLoad = 4 * time.Second
+
+// ArmyTimeout bounds a single attempt to load one army's report.
+const ArmyTimeout = 120 * time.Second
+
+// ReportTimeout bounds waiting for the report to refresh after picking an army.
+const ReportTimeout = 20 * time.Second
 const HeadlessMode = true
 
 func Configure(headless bool) []chromedp.ExecAllocatorOption {
