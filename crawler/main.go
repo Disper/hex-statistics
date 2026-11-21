@@ -16,7 +16,7 @@ import (
 const Url = `https://gf4ef464823eff3-db7tl3g.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/workspace_demo/tournamentapp/armywrmatrix1`
 const PickArmyCurrentlySelected = "//*[@id=\"P66_ARMY\"]"
 
-var armiesList = []string{"Beasts", "Borgo", "Dancer", "Death Breath", "Desert Tribes", "Doomsday Machine", "Hegemony", "Iron Gang", "Mephisto", "Merchants Guild", "Missisipi", "Moloch", "Neojungle", "New York", "Outpost", "Partisans", "Pirates", "Sand Runners", "Sharrash", "Smart", "Steel Police", "Troglodytes", "Uranopolis", "Vegas", "Wiremen"}
+var armiesList = []string{"Beasts", "Borgo", "Dancer", "Death Breath", "Desert Tribes", "Doomsday Machine", "Hegemony", "Iron Gang", "Mephisto", "Merchants Guild", "Missisipi", "Moloch", "Neojungle", "New York", "Outpost", "Partisans", "Pirates", "Sand Runners", "Sharrash", "Smart", "Steel Police", "Troglodytes", "Uranopolis", "Vegas", "Wiremen", "Purifiers"}
 
 //var armiesList = []string{"New York", "Sand Runners"}
 

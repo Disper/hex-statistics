@@ -133,6 +133,11 @@ export const ARMY_CARD_META: Record<string, ArmyCardMeta> = {
     description:
       "A community of rebels living inside Moloch itself — rogue cyborgs, escaped mutants, researchers and survivors. They fight using stolen Machine resources and cutting-edge cybernetics, blurring the line between friend and foe.",
   },
+  Purifiers: {
+    hqFile: "armies-hq/purifiers.jpg",
+    description:
+      "Pyromaniacs and extremists who travel from city to city, burning out infection and corruption with merciless flames. To them fire is the purest cleanser — whoever or whatever stands in their way burns as well.",
+  },
 };
 
 const FALLBACK_DESCRIPTION =

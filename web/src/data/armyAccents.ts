@@ -28,6 +28,7 @@ export const ARMY_ACCENTS: Record<string, string> = {
   Uranopolis: "#596155",
   Vegas: "#935d3f",
   Wiremen: "#8a526d",
+  Purifiers: "#c85a2d",
 };
 
 export function getArmyAccent(name: string): string {

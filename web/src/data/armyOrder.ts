@@ -29,6 +29,7 @@ export const ARMY_DISPLAY_ORDER: readonly string[] = [
   "Partisans",
   "Desert Tribes",
   "Wiremen",
+  "Purifiers",
 ];
 
 const ORDER_INDEX = new Map(ARMY_DISPLAY_ORDER.map((name, i) => [name, i]));
